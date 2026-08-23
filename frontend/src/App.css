@@ -1805,4 +1805,10 @@ select {
   .brand-name { font-size: 0.98rem; }
   .topbar-inner { padding: 8px 10px; }
   .avatar.as-button { flex-shrink: 0; }
+
+  /* login / signup page */
+  .auth-panel { padding: 26px 16px; align-items: flex-start; padding-top: 40px; }
+  .auth-box { width: 100%; }
+  .auth-box h2 { font-size: 22px; }
+  .segmented { margin-bottom: 18px; }
 }

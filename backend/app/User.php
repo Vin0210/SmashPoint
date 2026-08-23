@@ -43,6 +43,9 @@ class User extends Authenticatable
      */
     public function sendPasswordResetNotification($token)
     {
-        $this->notify(new ResetPasswordNotification($token));
+        $frontend = rtrim(config('app.frontend_url', env('FRONTEND_URL', 'http://localhost:5173')), '/');
+        $url = "{$frontend}/#/reset-password?token={$token}&email=" . urlencode($this->email);
+
+        \Mail::to($this->email)->send(new \App\Mail\ResetPasswordPlain($this->name, $url));
     }
 }

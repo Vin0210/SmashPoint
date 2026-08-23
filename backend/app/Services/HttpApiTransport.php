@@ -52,9 +52,10 @@ class HttpApiTransport implements \Swift_Transport
         }
 
         $html = $this->htmlBody($message);
+        $text = $this->textBody($message);
         $request = $this->buildRequest(
             $senderEmail, $senderName, $recipients,
-            $message->getSubject(), $html
+            $message->getSubject(), $html, $text
         );
         $endpoint = $request[0];
         $headers = $request[1];
@@ -93,7 +94,7 @@ class HttpApiTransport implements \Swift_Transport
      * Builds the endpoint, auth headers and JSON payload for the
      * configured provider.
      */
-    protected function buildRequest($fromEmail, $fromName, array $recipients, $subject, $html)
+    protected function buildRequest($fromEmail, $fromName, array $recipients, $subject, $html, $text = null)
     {
         $provider = strtolower(config('services.mail_api.provider', ''));
 
@@ -101,6 +102,12 @@ class HttpApiTransport implements \Swift_Transport
             $key = config('services.mail_api.sendgrid.key');
             if (! $key) {
                 throw new Swift_IoException('SENDGRID_API_KEY is not configured.');
+            }
+
+            if ($html !== null) {
+                $content = [['type' => 'text/html', 'value' => $html]];
+            } else {
+                $content = [['type' => 'text/plain', 'value' => (string) $text]];
             }
 
             $payload = [
@@ -111,7 +118,7 @@ class HttpApiTransport implements \Swift_Transport
                 ],
                 'from'    => ['email' => $fromEmail, 'name' => $fromName],
                 'subject' => $subject,
-                'content' => [['type' => 'text/html', 'value' => $html]],
+                'content' => $content,
             ];
 
             return [
@@ -128,16 +135,19 @@ class HttpApiTransport implements \Swift_Transport
                 throw new Swift_IoException('MAILJET keys are not configured.');
             }
 
-            $payload = [
-                'Messages' => [[
-                    'From'    => ['Email' => $fromEmail, 'Name' => $fromName],
-                    'To'      => array_map(function ($email, $name) {
-                        return ['Email' => $email, 'Name' => $name];
-                    }, array_keys($recipients), $recipients),
-                    'Subject' => $subject,
-                    'HTMLPart' => $html,
-                ]],
+            $msg = [
+                'From'    => ['Email' => $fromEmail, 'Name' => $fromName],
+                'To'      => array_map(function ($email, $name) {
+                    return ['Email' => $email, 'Name' => $name];
+                }, array_keys($recipients), $recipients),
+                'Subject' => $subject,
             ];
+            if ($html !== null) {
+                $msg['HTMLPart'] = $html;
+            } else {
+                $msg['TextPart'] = (string) $text;
+            }
+            $payload = ['Messages' => [$msg]];
 
             return [
                 'https://api.mailjet.com/v3.1/send',
@@ -156,8 +166,12 @@ class HttpApiTransport implements \Swift_Transport
             'sender' => ['email' => $fromEmail, 'name' => $fromName],
             'to'     => [],
             'subject' => $subject,
-            'htmlContent' => $html,
         ];
+        if ($html !== null) {
+            $payload['htmlContent'] = $html;
+        } else {
+            $payload['textContent'] = (string) $text;
+        }
         foreach ($recipients as $email => $name) {
             $payload['to'][] = ['email' => $email, 'name' => $name];
         }
@@ -185,6 +199,23 @@ class HttpApiTransport implements \Swift_Transport
         return $people;
     }
 
+    protected function textBody(Swift_Mime_Message $message)
+    {
+        if (stripos($message->getContentType(), 'text/plain') !== false
+            && stripos($message->getContentType(), 'text/html') === false) {
+            return $message->getBody();
+        }
+
+        foreach ($message->getChildren() as $part) {
+            if ($part instanceof \Swift_Mime_MimeEntity
+                && stripos($part->getContentType(), 'text/plain') !== false) {
+                return $part->getBody();
+            }
+        }
+
+        return null;
+    }
+
     protected function htmlBody(Swift_Mime_Message $message)
     {
         if (stripos($message->getContentType(), 'text/html') !== false) {
@@ -198,6 +229,6 @@ class HttpApiTransport implements \Swift_Transport
             }
         }
 
-        return nl2br(e($message->getBody()));
+        return null;
     }
 }
