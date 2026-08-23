@@ -29,11 +29,9 @@ class ResetPasswordNotification extends Notification
 
         return (new MailMessage)
             ->subject('Reset your SmashPoint password')
-            ->greeting("Hi {$notifiable->name},")
-            ->line('We received a request to reset the password for your SmashPoint account.')
-            ->line('Click the button below to choose a new password. This link expires in 60 minutes.')
-            ->action('Reset password', $url)
-            ->line('If you did not request a password reset, you can safely ignore this email.')
-            ->salutation('— The SmashPoint Team');
+            ->view('emails.reset_link_text', [
+                'name' => $notifiable->name,
+                'url' => $url,
+            ]);
     }
 }
