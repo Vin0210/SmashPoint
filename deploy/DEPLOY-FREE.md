@@ -82,7 +82,7 @@ Layout used by this package (everything inside the web root):
 | `The only supported ciphers...` | `APP_KEY` not set correctly |
 | API returns HTML instead of JSON | `.htaccess` didn't upload (hidden file! enable "show hidden") |
 | Photos don't upload | chmod `core/storage` to 755 (or 775) recursively |
-| Emails fail with timeout | Host blocks SMTP — set `BREVO_API_KEY` in `core/.env` (free brevo.com account, 300 emails/day) and all mail switches to their HTTP API automatically; SMS still works |
+| Emails fail with timeout | Host blocks SMTP — sign up at sendgrid.com (free 100/day), verify a sender, create an API key, then in `core/.env` set `MAIL_API_PROVIDER=sendgrid` and `SENDGRID_API_KEY=SG...`; all mail switches to their HTTP API automatically. (Mailjet/Brevo also supported.) |
 | Reset link opens wrong domain | `FRONTEND_URL` mismatch in `.env` |
 
 ## Notes on free-tier limits

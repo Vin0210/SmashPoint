@@ -13,12 +13,12 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot()
     {
-        // When a Brevo API key is configured, route all mail through its
-        // HTTP API instead of SMTP — works even if the host blocks
-        // outbound mail ports.
-        if (config('services.brevo.key')) {
+        // When an HTTP mail API provider is configured, route all mail
+        // through its web API instead of SMTP — works even if the host
+        // blocks outbound mail ports.
+        if (config('services.mail_api.provider')) {
             $this->app->extend('swift.mailer', function () {
-                return new \Swift_Mailer(new \App\Services\BrevoTransport);
+                return new \Swift_Mailer(new \App\Services\HttpApiTransport);
             });
         }
     }

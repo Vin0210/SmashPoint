@@ -1758,3 +1758,51 @@ select {
   from { transform: scale(0.94); opacity: 0; }
   to { transform: scale(1); opacity: 1; }
 }
+
+/* App.css — Part 4: logout confirmation + full responsiveness */
+
+/* ---------- logout confirm modal ---------- */
+.modal-confirm { width: 400px; }
+.modal-confirm .modal-head { margin-bottom: 2px; }
+.modal-confirm .modal-head p { margin-top: 4px; }
+
+.btn.ghost {
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
+  color: var(--green-900);
+}
+.btn.ghost:hover:not(:disabled) {
+  border-color: var(--green-600);
+  color: var(--green-700);
+  background: var(--green-50);
+}
+
+/* ---------- tablets ---------- */
+@media (max-width: 960px) {
+  .court-grid { grid-template-columns: repeat(auto-fill, minmax(290px, 1fr)); gap: 18px; }
+}
+
+/* ---------- phones ---------- */
+@media (max-width: 720px) {
+  .court-grid { grid-template-columns: 1fr; gap: 16px; }
+  .court-top { height: 180px; }
+  .stat-grid { grid-template-columns: repeat(2, 1fr); }
+  .topnav { gap: 2px; overflow-x: auto; scrollbar-width: none; }
+  .topnav::-webkit-scrollbar { display: none; }
+  .user-chip { gap: 8px; }
+  .page-head { flex-wrap: wrap; gap: 10px; }
+  .lb-stage img { max-height: 58vh; }
+  .admin-thumbs { gap: 8px; }
+}
+
+/* ---------- small phones ---------- */
+@media (max-width: 480px) {
+  .container { padding: 16px 12px 48px; }
+  .page-head h1 { font-size: 21px; }
+  .modal { padding: 18px; width: min(470px, 96vw); }
+  .profile-photo-card { padding: 20px 14px; }
+  .slot-grid { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; }
+  .brand-name { font-size: 0.98rem; }
+  .topbar-inner { padding: 8px 10px; }
+  .avatar.as-button { flex-shrink: 0; }
+}

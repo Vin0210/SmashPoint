@@ -41,10 +41,20 @@ return [
         'sender'  => env('SEMAPHORE_SENDER', 'SmashPoint'),
     ],
 
-    // Brevo (sendinblue.com) HTTP email API - fallback when a host
-    // blocks outbound SMTP. Empty key = normal SMTP mail.
-    'brevo' => [
-        'key' => env('BREVO_API_KEY'),
+    // HTTP email API (sendgrid / mailjet / brevo) - used when a host
+    // blocks outbound SMTP. Provider + key decide; empty = normal SMTP.
+    'mail_api' => [
+        'provider' => env('MAIL_API_PROVIDER'),
+        'sendgrid' => [
+            'key' => env('SENDGRID_API_KEY'),
+        ],
+        'mailjet' => [
+            'key'    => env('MAILJET_API_KEY'),
+            'secret' => env('MAILJET_SECRET_KEY'),
+        ],
+        'brevo' => [
+            'key' => env('BREVO_API_KEY'),
+        ],
     ],
 
 ];

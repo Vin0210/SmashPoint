@@ -37,6 +37,7 @@ export default function App() {
   const [booted, setBooted] = useState(() => !getSession())
   const [tab, setTab] = useState('courts')
   const [refreshKey, setRefreshKey] = useState(0)
+  const [confirmingLogout, setConfirmingLogout] = useState(false)
 
   useEffect(() => {
     if (!session || booted) return
@@ -166,12 +167,51 @@ export default function App() {
               <strong>{session.user.name}</strong>
               <small>{isAdmin ? 'Administrator' : 'Player'}</small>
             </span>
-            <button className="icon-btn" onClick={logout} title="Log out" aria-label="Log out">
+            <button
+              className="icon-btn"
+              onClick={() => setConfirmingLogout(true)}
+              title="Log out"
+              aria-label="Log out"
+            >
               <IconLogout size={17} />
             </button>
           </div>
         </div>
       </header>
+
+      {confirmingLogout && (
+        <div
+          className="modal-backdrop"
+          onClick={() => setConfirmingLogout(false)}
+        >
+          <div
+            className="modal modal-confirm"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="logout-title"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="modal-head">
+              <div>
+                <h3 id="logout-title">Log out?</h3>
+                <p>Are you sure you want to sign out of SmashPoint?</p>
+              </div>
+            </div>
+            <div className="modal-actions">
+              <button
+                type="button"
+                className="btn ghost"
+                onClick={() => setConfirmingLogout(false)}
+              >
+                Cancel
+              </button>
+              <button type="button" className="btn danger" onClick={logout}>
+                Log out
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <main className="container">
         {tab === 'profile' ? (
