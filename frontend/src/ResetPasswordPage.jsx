@@ -2,16 +2,25 @@ import { useState } from 'react'
 import { api, clearSession } from './api'
 import { LogoMark, IconCheck, IconAlert } from './icons'
 
-function readHashQuery() {
-  const hash = window.location.hash.replace(/^#/, '')
-  const qIndex = hash.indexOf('?')
-  return new URLSearchParams(qIndex >= 0 ? hash.slice(qIndex + 1) : window.location.search)
+function readResetContext() {
+  // Link format 1: #/reset-password/<token>/<email>   (no "?" — survives
+  // mail clients that truncate everything after a question mark)
+  const raw = window.location.hash.replace(/^#/, '')
+  const pathOnly = raw.split('?')[0]
+  const segs = pathOnly.split('/').filter(Boolean)
+  if (segs[0] === 'reset-password' && segs.length >= 3) {
+    return { token: segs[1], email: decodeURIComponent(segs.slice(2).join('/')) }
+  }
+  // Link format 2 (legacy): #/reset-password?token=...&email=...
+  const qIndex = raw.indexOf('?')
+  const query = new URLSearchParams(qIndex >= 0 ? raw.slice(qIndex + 1) : window.location.search)
+  return { token: query.get('token') || '', email: query.get('email') || '' }
 }
 
 export default function ResetPasswordPage() {
-  const [params] = useState(readHashQuery)
-  const token = params.get('token') || ''
-  const emailParam = params.get('email') || ''
+  const [ctx] = useState(readResetContext)
+  const token = ctx.token
+  const emailParam = ctx.email
   const validLink = Boolean(token && emailParam)
 
   const [password, setPassword] = useState('')
