@@ -104,7 +104,12 @@ class HttpApiTransport implements \Swift_Transport
                 throw new Swift_IoException('SENDGRID_API_KEY is not configured.');
             }
 
-            if ($html !== null) {
+            if ($html !== null && $text !== null) {
+                $content = [
+                    ['type' => 'text/plain', 'value' => $text],
+                    ['type' => 'text/html', 'value' => $html],
+                ];
+            } elseif ($html !== null) {
                 $content = [['type' => 'text/html', 'value' => $html]];
             } else {
                 $content = [['type' => 'text/plain', 'value' => (string) $text]];
@@ -144,7 +149,8 @@ class HttpApiTransport implements \Swift_Transport
             ];
             if ($html !== null) {
                 $msg['HTMLPart'] = $html;
-            } else {
+            }
+            if ($text !== null) {
                 $msg['TextPart'] = (string) $text;
             }
             $payload = ['Messages' => [$msg]];
@@ -169,7 +175,8 @@ class HttpApiTransport implements \Swift_Transport
         ];
         if ($html !== null) {
             $payload['htmlContent'] = $html;
-        } else {
+        }
+        if ($text !== null) {
             $payload['textContent'] = (string) $text;
         }
         foreach ($recipients as $email => $name) {

@@ -29,6 +29,7 @@ class ResetPasswordPlain extends Mailable
             ->from(config('mail.from.address'), config('mail.from.name'))
             ->subject('Reset your SmashPoint password')
             ->text('emails.reset_link_text')
+            ->view('emails.reset_link_html')
             ->with([
                 'name' => $this->name,
                 'url' => $this->url,
