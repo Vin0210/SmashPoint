@@ -1,0 +1,33 @@
+# Environment / secrets
+backend/.env
+deploy/.env.deploy
+*.env.local
+
+# Dependencies
+backend/vendor/
+frontend/node_modules/
+
+# Build output
+frontend/dist/
+deploy/htdocs/
+deploy/*.zip
+
+# Laravel runtime
+backend/storage/logs/*
+backend/storage/framework/cache/data/*
+backend/storage/framework/sessions/*
+backend/storage/framework/views/*
+backend/storage/app/public/courts/*
+backend/storage/app/public/avatars/*
+!**/.gitignore
+!**/.gitkeep
+
+# Uploads & user data
+photos/
+
+# OS / editor junk
+Thumbs.db
+.DS_Store
+*.log
+r*tmp.json
+_boot8.php
