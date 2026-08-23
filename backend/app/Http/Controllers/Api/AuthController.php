@@ -8,6 +8,8 @@ use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Password;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
 use App\Http\Controllers\Controller;
 use Swift_SwiftException;
@@ -138,54 +140,75 @@ class AuthController extends Controller
     }
 
     /**
-     * POST /api/forgot-password — email a reset link.
+     * POST /api/forgot-password — email a 6-digit reset code.
      */
     public function forgotPassword(Request $request)
     {
         $this->validate($request, ['email' => 'required|email']);
 
-        try {
-            $response = $this->broker()->sendResetLink($request->only('email'));
+        $email = $request->input('email');
+        $user = \App\User::where('email', $email)->first();
 
-            if ($response === Password::RESET_LINK_SENT) {
-                return response()->json(['message' => 'If that email address exists, we have sent a reset link to it.']);
+        if ($user) {
+            $code = (string) random_int(100000, 999999);
+
+            DB::table('password_resets')->updateOrInsert(
+                ['email' => $email],
+                [
+                    'token'      => Hash::make($code),
+                    'created_at' => \Carbon\Carbon::now(),
+                ]
+            );
+
+            try {
+                Mail::to($email)->send(new \App\Mail\ResetCodeMail($user->name, $code));
+            } catch (Swift_SwiftException $e) {
+                Log::error('Failed to send password reset code: '.$e->getMessage());
+
+                return response()->json(['message' => 'We could not send the email right now. Please try again later.'], 503);
             }
-        } catch (Swift_SwiftException $e) {
-            Log::error('Failed to send password reset email: '.$e->getMessage());
-
-            return response()->json(['message' => 'We could not send the email right now. Please try again later.'], 503);
         }
 
         // Same generic reply whether or not the account exists.
-        return response()->json(['message' => 'If that email address exists, we have sent a reset link to it.']);
+        return response()->json(['message' => 'If that email address exists, we have sent a 6-digit reset code to it.']);
     }
 
     /**
-     * POST /api/reset-password — consume a reset token.
+     * POST /api/reset-password — consume a 6-digit code.
      */
     public function resetPassword(Request $request)
     {
         $this->validate($request, [
-            'token'    => 'required',
             'email'    => 'required|email',
+            'code'     => 'required|digits:6',
             'password' => 'required|min:6|confirmed',
         ]);
 
-        $response = $this->broker()->reset(
-            $request->only('email', 'password', 'password_confirmation', 'token'),
-            function ($user, $password) {
-                $user->password = Hash::make($password);
-                $user->api_token = null; // force re-login on other devices
-                $user->setRememberToken(Str::random(60));
-                $user->save();
-            }
-        );
+        $email = $request->input('email');
 
-        if ($response === Password::PASSWORD_RESET) {
-            return response()->json(['message' => 'Your password has been reset. You can now sign in with your new password.']);
+        $row = DB::table('password_resets')->where('email', $email)->first();
+
+        if (! $row || \Carbon\Carbon::parse($row->created_at)->diffInMinutes(\Carbon\Carbon::now()) > 60) {
+            return response()->json(['message' => 'This code has expired. Please request a new one.'], 422);
         }
 
-        return response()->json(['message' => 'This reset link is invalid or has expired. Please request a new one.'], 422);
+        if (! Hash::check($request->input('code'), $row->token)) {
+            return response()->json(['message' => 'That code is not correct. Check the email and try again.'], 422);
+        }
+
+        $user = \App\User::where('email', $email)->first();
+        if (! $user) {
+            return response()->json(['message' => 'No account found for that email.'], 422);
+        }
+
+        $user->password = Hash::make($request->input('password'));
+        $user->api_token = null; // force re-login on other devices
+        $user->setRememberToken(Str::random(60));
+        $user->save();
+
+        DB::table('password_resets')->where('email', $email)->delete();
+
+        return response()->json(['message' => 'Your password has been reset. You can now sign in with your new password.']);
     }
 
     protected function broker()

@@ -93,7 +93,7 @@ export default function AuthPage({ onAuth }) {
                 <>
                   <h2>Forgot password?</h2>
                   <p className="auth-sub">
-                    Enter your account email and we&apos;ll send you a reset link.
+                    Enter your account email and we&apos;ll send you a 6-digit reset code.
                   </p>
                   <form onSubmit={submit} className="auth-form">
                     <label className="field">
@@ -113,7 +113,7 @@ export default function AuthPage({ onAuth }) {
                       </div>
                     )}
                     <button className="btn primary block" disabled={busy}>
-                      {busy ? 'Sending…' : 'Send reset link'}
+                      {busy ? 'Sending…' : 'Send reset code'}
                     </button>
                   </form>
                 </>
@@ -121,10 +121,14 @@ export default function AuthPage({ onAuth }) {
                 <>
                   <h2>Check your inbox</h2>
                   <p className="auth-sub">
-                    If an account exists for <strong>{form.email}</strong>, a password
-                    reset link is on its way. The link expires in 60 minutes.
+                    If an account exists for <strong>{form.email}</strong>, a 6-digit
+                    reset code is on its way. Open the reset page from the menu, enter
+                    the code and choose a new password. The code expires in 60 minutes.
                   </p>
-                  <button className="btn block" onClick={() => setMode('login')}>
+                  <a className="btn primary block" href="#/reset-password">
+                    Enter reset code
+                  </a>
+                  <button className="btn block" style={{ marginTop: 8 }} onClick={() => setMode('login')}>
                     Back to sign in
                   </button>
                 </>
