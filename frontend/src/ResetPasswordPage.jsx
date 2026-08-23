@@ -10,15 +10,17 @@ function readHashQuery() {
 
 export default function ResetPasswordPage() {
   const [params] = useState(readHashQuery)
-  const [email, setEmail] = useState(params.get('email') || '')
-  const [code, setCode] = useState('')
+  const token = params.get('token') || ''
+  const emailParam = params.get('email') || ''
+  const validLink = Boolean(token && emailParam)
+
   const [password, setPassword] = useState('')
   const [confirm, setConfirm] = useState('')
   const [error, setError] = useState('')
   const [busy, setBusy] = useState(false)
   const [done, setDone] = useState(false)
 
-  // Opening a reset page means account-recovery mode: any saved session
+  // Opening a reset link means account-recovery mode: any saved session
   // must not carry over to the sign-in screen afterwards.
   clearSession()
 
@@ -33,7 +35,7 @@ export default function ResetPasswordPage() {
     try {
       await api('/reset-password', {
         method: 'POST',
-        body: { email, code, password, password_confirmation: confirm },
+        body: { token, email: emailParam, password, password_confirmation: confirm },
       })
       clearSession()
       setDone(true)
@@ -52,7 +54,15 @@ export default function ResetPasswordPage() {
           <strong>SmashPoint</strong>
         </div>
 
-        {done ? (
+        {!validLink ? (
+          <>
+            <h2>Invalid link</h2>
+            <p className="auth-sub">
+              This password reset link is missing its token. Please request a new one.
+            </p>
+            <a className="btn block" href="./">Back to sign in</a>
+          </>
+        ) : done ? (
           <div className="success-view">
             <div className="success-check"><IconCheck size={28} /></div>
             <h2>Password reset</h2>
@@ -61,34 +71,9 @@ export default function ResetPasswordPage() {
           </div>
         ) : (
           <>
-            <h2>Reset your password</h2>
-            <p className="auth-sub">
-              Enter the 6-digit code we emailed you, then choose a new password.
-            </p>
+            <h2>Set a new password</h2>
+            <p className="auth-sub">Resetting the password for <strong>{emailParam}</strong>.</p>
             <form onSubmit={submit} className="auth-form">
-              <label className="field">
-                <span className="form-label">Email address</span>
-                <input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                  placeholder="you@example.com"
-                />
-              </label>
-              <label className="field">
-                <span className="form-label">6-digit code</span>
-                <input
-                  type="text"
-                  value={code}
-                  onChange={(e) => setCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
-                  required
-                  inputMode="numeric"
-                  autoComplete="one-time-code"
-                  placeholder="e.g. 483920"
-                  style={{ letterSpacing: 8, fontSize: '1.2rem', textAlign: 'center' }}
-                />
-              </label>
               <label className="field">
                 <span className="form-label">New password</span>
                 <input
